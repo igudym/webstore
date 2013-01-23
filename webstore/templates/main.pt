@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title metal:define-slot="title">Web store</title>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <div tal:omit-tag="" metal:define-slot="scripts"/>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="static/css/webstore.css" rel="stylesheet" media="screen">
+</head>
+<body>
+    <div metal:define-slot="content"/>
+</body>
+</html>

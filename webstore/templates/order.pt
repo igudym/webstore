@@ -1,0 +1,161 @@
+<metal:main use-macro="load: main.pt">
+    <script metal:fill-slot="scripts" type="text/javascript">
+    $(document).ready(function () {
+        if ($("[rel=tooltip]").length) {
+            $("[rel=tooltip]").tooltip();
+        }
+        $('#lid').bind('input propertychange', function() {
+            check_lic();
+        });
+    });
+    function switch_lic(){
+        if( $("#newuser").prop('checked') ){
+            $("#lid").prop('disabled', true);
+            $("#message").prop('innerHTML', '');
+            $("#license").prop('class', 'control-group');
+            $("#submit").prop('disabled', false);
+        }else{
+            $("#lid").prop('disabled', false);
+            check_lic();
+        }
+    }
+    function check_lic(){
+        lid = $('#lid').prop('value');
+        if( lid.length < 12 ){
+            $("#message").prop('innerHTML', 'Wrong license ID format');
+            $("#license").prop('class', 'control-group warning');
+            $("#submit").prop('disabled', true);
+        }else{
+            $.getJSON('/check_license.json?license='+lid, function(data) {
+                if( data == 'valid'){
+                    $("#message").prop('innerHTML', 'Valid license');
+                    $("#license").prop('class', 'control-group success');
+                    $("#submit").prop('disabled', false);
+                }else{
+                    $("#message").prop('innerHTML', 'Invalid license');
+                    $("#license").prop('class', 'control-group error');
+                    $("#submit").prop('disabled', true);
+                }
+            });
+        }
+    }
+    function calc(){
+        bundle = 0;
+        $('.bundle span').each(function(index){
+            if($('.bundle [value="'+$(this).prop('id')+'"]').prop('checked')){
+                bundle = parseFloat($(this).prop('innerHTML'));
+            }
+        });
+        modules = 0;
+        $('.module span').each(function(index){
+            if($('.module [value="'+$(this).prop('id')+'"]').prop('checked')){
+                modules = modules + parseFloat($(this).prop('innerHTML'));
+            }
+        });
+        total = Number((bundle + modules).toFixed(2));
+        $('#total').prop('innerHTML', total)
+        $('#totalcard').prop('innerHTML', total)
+    }
+    function toggleCard() {
+        if ($('#paypal').is(':checked')) {
+            //$('#card_data :input').prop('disabled', true);
+            $('#card_data').hide(1000, 'swing');
+        } else {
+            //$('#card_data :input').removeAttr('disabled');
+            $('#card_data').show(1000, 'swing');
+        }
+    }
+    </script>
+    <div metal:fill-slot="content" class="container">
+        <form method='post'>
+            <fieldset>
+                <legend>Are you upgrading an existing license?</legend>
+                <label class="radio">
+                    <input id="newuser" type="radio" name="lic" value='new' onclick="switch_lic()" checked/>
+                    No
+                </label>
+                <label class="radio">
+                    <input id="upgrade" type="radio" name="lic" value='upgrade' onclick="switch_lic()"/>
+                    Yes
+                </label>
+                <div id='license' class="control-group">
+                    <label class="control-label" for="lid">Enter License ID:</label>
+                    <div class="controls">
+                        <input type='text' id="lid" name="license" placeholder="License ID" disabled/>
+                        <span id='message' class="help-inline"></span>
+                    </div>
+                </div>
+            </fieldset>
+            <script type="text/javascript">
+                var price = new Object();
+            </script>
+            <fieldset>
+                <legend>What would you like to purchase?</legend>
+                <label>Bundles:</label>
+                <div class='bundle'>
+                    <input type='radio' name='bundle' value='0' onclick="calc()" checked>No Bundle</input>
+                    <ul class='items'>
+                    </ul>
+                </div>
+                <div class='bundle' tal:repeat='bundle bundles'>
+                    <input type='radio' name='bundle' value='${bundle.sku}' onclick="calc()">
+                        ${bundle.name} $<span id='${bundle.sku}'>${bundle.price}</span>
+                    </input>
+                    <ul class='items'>
+                        <li class='item' tal:repeat='item bundle.items'>${item.name}</li>
+                    </ul>
+                </div>
+                <label>Individual Modules:</label>
+                <div class='module' tal:repeat='module modules'>
+                    <input type='checkbox' name='module' value='${module.sku}' onclick="calc()">
+                        <a rel="tooltip" href="${module.url}" data-placement="right" data-original-title="${module.description}">
+                            ${module.name}
+                        </a> - $<span id='${module.sku}'>${module.price}</span>
+                    </input>
+                </div>
+            </fieldset>
+            <div class='total section well'>
+                Total: US $<span id=total>0.0</span>
+            </div>
+            <fieldset>
+                <legend>Payment:</legend>
+                <label>Your Name:</label> <input type='text' name='name' placeholder="Name">
+                <label>Your Email:</label> <input type='text' name='email' placeholder="Email"/>
+                <label>Payment Method:</label>
+                <label class="radio inline">
+                    <input type='radio' name='method' value='card' checked onchange="toggleCard()"/>
+                    Credit Card
+                </label>
+                <label class="radio inline">
+                    <input type='radio' name='method' id='paypal' value='paypal' onchange="toggleCard()"/>
+                    PayPal
+                </label>
+                <div class='card_data section' id='card_data'>
+                    <fieldset>
+                        <p class="lead">Billing Address</p>
+                        <label>Address 1:</label> <input type='text' name='address1'/>
+                        <label>Address 2:</label> <input type='text' name='address2'/>
+                        <label>City:</label> <input type='text' name='city'/>
+                        <label>State / Province:</label><input type='text' name='state'/>
+                        <label>Zip / Postal Code:</label> <input type='text' name='zip'/>
+                        <label>Country:</label>
+                            <select name="country" metal:use-macro="load: countries.pt">
+                            </select>
+                    </fieldset>
+                    <fieldset>
+                        <p class="lead">Card data</p>
+                        <label>Credit Card #:</label> <input type='text' name='card'/>
+                        <label>Expiration Date:</label> <input type='text' name='expire'/>
+                        <label>CVV2:</label> <input type='text' name='cvv2'/>
+                    </fieldset>
+                    <div class='totalcard well'>
+                        Total: US $<span id=totalcard>0.0</span>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="form-actions">
+                <button id='submit' type="submit" class="btn btn-primary">Submit Order</button>
+            </div>
+        </form>
+    </div>
+</metal:main>
