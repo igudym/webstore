@@ -59,10 +59,10 @@
     function toggleCard() {
         if ($('#paypal').is(':checked')) {
             //$('#card_data :input').prop('disabled', true);
-            $('#card_data').hide(1000, 'swing');
+            $('#card_data').hide(400, 'swing');
         } else {
             //$('#card_data :input').removeAttr('disabled');
-            $('#card_data').show(1000, 'swing');
+            $('#card_data').show(400, 'swing');
         }
     }
     </script>
