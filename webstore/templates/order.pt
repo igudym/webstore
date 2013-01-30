@@ -20,9 +20,14 @@
         }
     }
     function check_lic(){
-        lid = $('#lid').prop('value');
-        if( lid.length < 12 ){
-            $("#message").prop('innerHTML', 'Wrong license ID format');
+        lid = $('#lid').prop('value').replace(/\s+/g, '');
+        if( lid.length == 0 ){
+            $("#message").prop('innerHTML', '');
+            $("#license").prop('class', 'control-group');
+            $("#submit").prop('disabled', true);
+            $("#bundles").prop('disabled', true);
+        }else if( lid.length < 12 ){
+            $("#message").prop('innerHTML', 'License ID too short');
             $("#license").prop('class', 'control-group warning');
             $("#submit").prop('disabled', true);
         }else{
@@ -89,7 +94,7 @@
             <script type="text/javascript">
                 var price = new Object();
             </script>
-            <fieldset>
+            <fieldset class='bundles'>
                 <legend>What would you like to purchase?</legend>
                 <label>Bundles:</label>
                 <div class='bundle'>
@@ -119,7 +124,8 @@
             </div>
             <fieldset>
                 <legend>Payment:</legend>
-                <label>Your Name:</label> <input type='text' name='name' placeholder="Name">
+                <label>First Name:</label> <input type='text' name='first_name' placeholder="First Name">
+                <label>Last Name:</label> <input type='text' name='last_name' placeholder="Last Name">
                 <label>Your Email:</label> <input type='text' name='email' placeholder="Email"/>
                 <label>Payment Method:</label>
                 <label class="radio inline">
@@ -144,8 +150,8 @@
                     </fieldset>
                     <fieldset>
                         <p class="lead">Card data</p>
-                        <label>Credit Card #:</label> <input type='text' name='card'/>
-                        <label>Expiration Date:</label> <input type='text' name='expire'/>
+                        <label>Credit Card #:</label> <input type='text' name='card' value='4111111111111111'/>
+                        <label>Expiration Date (mm/yyyy):</label> <input type='text' name='expire' value='12/2015'/>
                         <label>CVV2:</label> <input type='text' name='cvv2'/>
                     </fieldset>
                     <div class='totalcard well'>

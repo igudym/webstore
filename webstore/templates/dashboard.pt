@@ -1,0 +1,25 @@
+<metal:main use-macro="load: main.pt">
+    <div metal:fill-slot="content" class="container">
+        <h1>Dasboard</h1>
+        <h2>Orders</h2>
+        <table class="table table-striped">
+            <tr>
+                <th>#</th><th>Customer Name</th><th>Email</th><th>Items</th><th>Serial</th><th>Total</th><th>Paid By</th><th>Status</th><th>Created</th>
+                <th>Address 1</th><th>Address 2</th><th>City</th><th>State</th><th>ZIP</th><th>Country</th>
+            </tr>
+            <tr tal:repeat='order orders'>
+                <td>${order.order_id}</td><td>${order.first_name} ${order.last_name}</td><td>${order.email}</td>
+                <td><span tal:repeat='item order.items'>${item.sku}</span></td>
+                <td>${order.pdserial}</td><td>${order.total}</td><td>${order.payment}</td><td>${order.status}</td><td>${order.created}</td>
+                <td>${order.addr1}</td><td>${order.addr2}</td><td>${order.city}</td><td>${order.state}</td><td>${order.zipcode}</td><td>${order.country}</td>
+            </tr>
+        </table>
+        <h2>Licenses</h2>
+        <table class="table table-striped">
+            <tr><th>Serial</th><th>Reg ID</th><th>Created</th><th>Order ID</th></tr>
+            <tr tal:repeat='license licenses'>
+                <td>${license.pdserial}</td><td>${license.regid}</td><td>${license.created}</td><td>${license.orderid}</td>
+            </tr>
+        </table>
+    </div>
+</metal:main>

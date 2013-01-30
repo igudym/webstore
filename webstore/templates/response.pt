@@ -1,0 +1,8 @@
+<metal:main use-macro="load: main.pt">
+    <div metal:fill-slot="content" class="container">
+    <h1>Transaction Response</h1>
+    <ul>
+      <li>Status - ${message}</li>
+    </ul>
+    </div>
+</metal:main>

@@ -9,12 +9,7 @@ from pyramid.paster import (
     setup_logging,
     )
 
-from ..models import (
-    DBSession,
-    #MyModel,
-    Base,
-    )
-
+from ..dbsession import DBSession, Base
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
@@ -31,6 +26,9 @@ def main(argv=sys.argv):
     settings = get_appsettings(config_uri)
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
+    Base.metadata.bind = engine
+    Base.metadata.reflect(only=('anlicenses', 'pdidx'))
+    from ..models import Order
     Base.metadata.create_all(engine)
     #with transaction.manager:
         #model = MyModel(name='one', value=1)
