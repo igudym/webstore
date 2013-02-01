@@ -37,6 +37,14 @@
                 <input type='hidden' name='tr_data' value='${tr_data}' />
                 <input type='hidden' name='transaction[credit_card][number]' id='braintree_credit_card_number' value="${v['card']}"/>
                 <input type='hidden' name='transaction[credit_card][expiration_date]' id='braintree_credit_card_exp' value="${v['expire']}"/>
+                <input type='hidden' name='transaction[billing][first_name]' value="${order.first_name}"/>
+                <input type='hidden' name='transaction[billing][last_name]' value="${order.last_name}"/>
+                <input type='hidden' name='transaction[billing][street_address]' value="${order.addr1}"/>
+                <input type='hidden' name='transaction[billing][extended_address]' value="${order.addr2}"/>
+                <input type='hidden' name='transaction[billing][locality]' value="${order.city}"/>
+                <input type='hidden' name='transaction[billing][region]' value="${order.state}"/>
+                <input type='hidden' name='transaction[billing][postal_code]' value="${order.zipcode}"/>
+                <input type='hidden' name='transaction[billing][country_name]' value="${order.country}"/>
                 <div class="form-actions">
                     <button id='submit' type="submit" class="btn btn-primary">Checkout</button>
                 </div>

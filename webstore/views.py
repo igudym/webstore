@@ -50,12 +50,14 @@ def payment_view(request):
         paypal = _get_paypal(request.registry.settings)
         try:
             result = paypal.get_express_checkout_details(token=token)
+            print result
             payerid = result['PAYERID']
             result = paypal.do_express_checkout_payment(token=token, payerid=payerid,
                 PAYMENTACTION='SALE',
                 PAYMENTREQUEST_0_PAYMENTACTION='SALE',
                 PAYMENTREQUEST_0_AMT=str(order.total)
                 )
+            print result
         except PayPalAPIResponseError, e:
             return render_to_response('templates/error.pt',
                 {'message': str(e), 'url': request.application_url})
