@@ -15,6 +15,7 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'braintree',
+    'paypal',
     ]
 
 setup(name='webstore',

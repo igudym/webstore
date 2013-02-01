@@ -1,0 +1,19 @@
+<metal:main use-macro="load: main.pt">
+    <div metal:fill-slot="content" class="container">
+        <h1>Thanks for your order!</h1>
+        <div tal:condition='new'>Your New License ID is:</div>
+        <div tal:condition='not new'>Upgrade for License ID:</div>
+        <div class="well well-large regid">
+            ${regid}
+        </div>
+        <div tal:condition='new'>To activate your new license, (blah blah blah)</div>
+        <div tal:condition='not new'>To upgrade your license, (blah blah blah)</div>
+
+        <h3>Products Purchased:</h3>
+        <table class='table table-hover'>
+            <tr tal:repeat='item order.items'>
+                <td>${item.product.name}</td>
+            </tr>
+        </table>
+    </div>
+</metal:main>

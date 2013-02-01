@@ -27,7 +27,7 @@ def main(argv=sys.argv):
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
-    Base.metadata.reflect(only=('anlicenses', 'pdidx'))
+    Base.metadata.reflect(only=('anlicenses', 'pdidx', 'anproducts'))
     from ..models import Order
     Base.metadata.create_all(engine)
     #with transaction.manager:

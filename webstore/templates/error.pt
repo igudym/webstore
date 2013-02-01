@@ -1,0 +1,9 @@
+<metal:main use-macro="load: main.pt">
+    <div metal:fill-slot="content" class="container">
+        <div class="alert alert-block alert-error fade in">
+            <h4 class="alert-heading">Sorry, your order could not be processed.</h4>
+            ${message}
+        </div>
+        <a class='btn btn-primary' href='${url}'>Back to order page</a>
+    </div>
+</metal:main>

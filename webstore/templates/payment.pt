@@ -13,7 +13,7 @@
             <tr tal:repeat='item order.items'>
                 <td>${item.sku}</td>
                 <td>${item.product.name}</td>
-                <td>$${item.price}</td>
+                <td>$${item.product.price}</td>
             </tr>
             <tr><td colspan='2'>Total:</td><td>$${order.total}</td>
         </table>
@@ -32,13 +32,21 @@
             </div>
         </div>
         Please, check carefully order details above and then proceed to checkout.
-        <form id='payment-form' action='${braintree_url}' method='POST'>
-            <input type='hidden' name='tr_data' value='${tr_data}' />
-            <input type='hidden' name='transaction[credit_card][number]' id='braintree_credit_card_number' value="${v['card']}"/>
-            <input type='hidden' name='transaction[credit_card][expiration_date]' id='braintree_credit_card_exp' value="${v['expire']}"/>
-            <div class="form-actions">
-                <button id='submit' type="submit" class="btn btn-primary">Checkout</button>
-            </div>
-        </form>
+        <div tal:switch='order.payment'>
+            <form tal:case='"card"' id='payment-form' action='${braintree_url}' method='POST'>
+                <input type='hidden' name='tr_data' value='${tr_data}' />
+                <input type='hidden' name='transaction[credit_card][number]' id='braintree_credit_card_number' value="${v['card']}"/>
+                <input type='hidden' name='transaction[credit_card][expiration_date]' id='braintree_credit_card_exp' value="${v['expire']}"/>
+                <div class="form-actions">
+                    <button id='submit' type="submit" class="btn btn-primary">Checkout</button>
+                </div>
+            </form>
+            <form tal:case='"paypal"' id='payment-form' method='POST'>
+                <input type='hidden' name='order' value='${order.order_id}' />
+                <div class="form-actions">
+                    <button id='submit' name='proceed' type="submit" class="btn btn-primary">Checkout</button>
+                </div>
+            </form>
+        </div>
     </div>
 </metal:main>

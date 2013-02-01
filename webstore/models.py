@@ -34,15 +34,38 @@ class Order(Base):
     state = Column(String(100))
     zipcode = Column(String(100))
     country = Column(String(100))
+    paypal_token = Column(String(30))
+
+    def confirm(self):
+        self.status = 'paid'
+        if self.pdserial:
+            License.update(self.pdserial)
+        else:
+            self.pdserial = License.create(self.order_id)
+        for item in self.items:
+            prodserial = 0
+            if item.product.serialtab:
+                tab = Table(item.product.serialtab, Base.metadata, autoload=True)
+                res = tab.insert().values(
+                    pdserial=self.pdserial,
+                    source="Website",
+                    orderid=self.order_id
+                ).execute()
+                prodserial = res.inserted_primary_key[0]
+            anproducts.insert().values(
+                product=item.sku,
+                pdserial=self.pdserial,
+                prodserial=prodserial,
+                source="Website",
+                orderid=self.order_id,
+                valid='Y'
+            ).execute()
 
     @staticmethod
-    def confirm(order_id):
-        order = DBSession.query(Order).filter(order_id==order_id).one()
-        order.status = 'paid'
-        if order.pdserial:
-            License.update(order.pdserial)
-        else:
-            order.pdserial = License.create(order.order_id)
+    def confirm_order(order_id):
+        order = DBSession.query(Order).filter(Order.order_id==order_id).one()
+        order.confirm()
+        return order
 
 
 bundles = Table('bundles', Base.metadata,
@@ -54,8 +77,6 @@ class Items(Base):
     __tablename__ = 'items'
     order_id = Column(Integer, ForeignKey('orders.order_id'), primary_key=True)
     sku = Column(String(20), ForeignKey('products.sku'), primary_key=True)
-    price = Column(Numeric(precision=7, scale=2))
-    pdserial = Column(Integer)
     product = relationship("Product")
 
 
@@ -75,10 +96,12 @@ class Product(Base):
     display_order = Column(Integer)
     description = Column(Text)
     url = Column(String(2000))
+    serialtab = Column(String(50))
 
 
 anlicenses = Table('anlicenses', Base.metadata, autoload=True)
 pdidx = Table('pdidx', Base.metadata, autoload=True)
+anproducts = Table('anproducts', Base.metadata, autoload=True)
 
 
 class License():
