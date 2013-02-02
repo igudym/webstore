@@ -171,7 +171,8 @@ def order_view(request):
 def check_licence(request):
     if 'license' in request.params:
         lic = License()
-        return ['valid' if lic.check(request.params['license'], True) else 'invalid']
+        pdserial = lic.check(request.params['license'])
+        return [p.product for p in lic.products(pdserial)] if pdserial else []
     return ['invalid request']
 
 conn_err_msg = """\

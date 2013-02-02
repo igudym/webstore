@@ -16,6 +16,12 @@ from sqlalchemy.orm import relationship
 
 from dbsession import DBSession, Base
 
+
+anlicenses = Table('anlicenses', Base.metadata, autoload=True)
+pdidx = Table('pdidx', Base.metadata, autoload=True)
+anproducts = Table('anproducts', Base.metadata, autoload=True)
+
+
 class Order(Base):
     __tablename__ = 'orders'
     order_id = Column(Integer, primary_key=True)
@@ -36,6 +42,16 @@ class Order(Base):
     country = Column(String(100))
     paypal_token = Column(String(30))
 
+    def _add_product(self, item, prodserial):
+        anproducts.insert().values(
+            product=item.sku,
+            pdserial=self.pdserial,
+            prodserial=prodserial,
+            source="Website",
+            orderid=self.order_id,
+            valid='Y'
+        ).execute()
+
     def confirm(self):
         self.status = 'paid'
         if self.pdserial:
@@ -52,14 +68,11 @@ class Order(Base):
                     orderid=self.order_id
                 ).execute()
                 prodserial = res.inserted_primary_key[0]
-            anproducts.insert().values(
-                product=item.sku,
-                pdserial=self.pdserial,
-                prodserial=prodserial,
-                source="Website",
-                orderid=self.order_id,
-                valid='Y'
-            ).execute()
+            if item.product.bundle:
+                for subitem in item.product.items:
+                    self._add_product(subitem, prodserial)
+            else:
+                self._add_product(item, prodserial)
 
     @staticmethod
     def confirm_order(order_id):
@@ -99,19 +112,15 @@ class Product(Base):
     serialtab = Column(String(50))
 
 
-anlicenses = Table('anlicenses', Base.metadata, autoload=True)
-pdidx = Table('pdidx', Base.metadata, autoload=True)
-anproducts = Table('anproducts', Base.metadata, autoload=True)
-
-
 class License():
 
     @staticmethod
     def check(regid, check_valid=False):
-        """ Returns True if licence exists, if check_valid checks valid!=N
+        """ Returns 'pdserial' if licence exists, if check_valid checks valid!=N
         """
         row = anlicenses.select().where(anlicenses.c.regid==regid).execute().fetchone()
-        return row is not None and check_valid and row['valid'] != 'N'
+        return row['pdserial'] if row is not None and (
+                                    not check_valid or row['valid'] != 'N') else False
 
     @staticmethod
     def generate():
@@ -142,3 +151,9 @@ class License():
         row = anlicenses.select().where(anlicenses.c.pdserial==pdserial).execute().fetchone()
         anlicenses.update().where(anlicenses.c.pdserial==pdserial).values(
             lastchange=datetime.now(), sequence=row['sequence']+1).execute()
+
+    @staticmethod
+    def products(pdserial):
+        statement = anproducts.select().where(anproducts.c.pdserial==pdserial)
+        for row in statement.execute().fetchall():
+            yield row

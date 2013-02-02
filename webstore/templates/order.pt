@@ -7,13 +7,19 @@
         $('#lid').bind('input propertychange', function() {
             check_lic();
         });
+        $("#submit").prop('disabled', total < 0.01);
     });
+    var products = [];
+    var total = 0.0;
     function switch_lic(){
         if( $("#newuser").prop('checked') ){
             $("#lid").prop('disabled', true);
             $("#message").prop('innerHTML', '');
             $("#license").prop('class', 'control-group');
-            $("#submit").prop('disabled', false);
+            $("#submit").prop('disabled', total < 0.01);
+            $(".bundles").prop('disabled', false);
+            products = [];
+            check_mods();
         }else{
             $("#lid").prop('disabled', false);
             check_lic();
@@ -21,26 +27,32 @@
     }
     function check_lic(){
         lid = $('#lid').prop('value').replace(/\s+/g, '');
-        if( lid.length == 0 ){
-            $("#message").prop('innerHTML', '');
-            $("#license").prop('class', 'control-group');
+        if( lid.length < 12 ){
+            products = [];
+            check_mods();
+            $(".bundles").prop('disabled', true);
             $("#submit").prop('disabled', true);
-            $("#bundles").prop('disabled', true);
-        }else if( lid.length < 12 ){
-            $("#message").prop('innerHTML', 'License ID too short');
-            $("#license").prop('class', 'control-group warning');
-            $("#submit").prop('disabled', true);
+            if( lid.length == 0 ){
+                $("#message").prop('innerHTML', '');
+                $("#license").prop('class', 'control-group');
+            }else{
+                $("#message").prop('innerHTML', 'License ID too short');
+                $("#license").prop('class', 'control-group warning');
+            }
         }else{
             $.getJSON('/check_license.json?license='+lid, function(data) {
-                if( data == 'valid'){
+                products = data
+                if( data.length > 0){
                     $("#message").prop('innerHTML', 'Valid license');
                     $("#license").prop('class', 'control-group success');
-                    $("#submit").prop('disabled', false);
+                    $("#submit").prop('disabled', total < 0.01);
+                    $(".bundles").prop('disabled', false);
                 }else{
                     $("#message").prop('innerHTML', 'Invalid license');
                     $("#license").prop('class', 'control-group error');
                     $("#submit").prop('disabled', true);
                 }
+                check_mods();
             });
         }
     }
@@ -60,6 +72,8 @@
         total = Number((bundle + modules).toFixed(2));
         $('#total').prop('innerHTML', total)
         $('#totalcard').prop('innerHTML', total)
+        $("#submit").prop('disabled', total < 0.01);
+        check_mods();
     }
     function toggleCard() {
         if ($('#paypal').is(':checked')) {
@@ -69,6 +83,40 @@
             //$('#card_data :input').removeAttr('disabled');
             $('#card_data').show(400, 'swing');
         }
+    }
+    var bundle_items = {'0': []};
+    var bundle_limits = {'0': 1};
+    function check_mods(){
+        $('.bundle input').each(function(index){
+            if($(this).prop('checked')){
+                var arr = bundle_items[$(this).prop('value')]
+                $('.module input').each(function(){
+                    if( arr.indexOf($(this).prop('value')) >= 0 ||
+                        products.indexOf($(this).prop('value')) >= 0 ){
+                        $(this).prop('disabled', true);
+                    }else{
+                        $(this).prop('disabled', false);
+                    }
+                });
+            }
+
+        });
+        check_bundles();
+    }
+    function check_bundles(){
+        $('.bundle input').each(function(index){
+            var n = 0;
+            sku = $(this).prop('value')
+            for(i = 0; i < products.length; i++){
+                if(bundle_items[sku].indexOf(products[i]) >= 0) n++;
+            }
+            $('.module input').each(function(index){
+                if($(this).prop('checked')){
+                    if(bundle_items[sku].indexOf($(this).prop('value')) >= 0) n++;
+                }
+            });
+            $(this).prop('disabled', n > bundle_limits[sku]);
+        });
     }
     </script>
     <div metal:fill-slot="content" class="container">
@@ -91,9 +139,6 @@
                     </div>
                 </div>
             </fieldset>
-            <script type="text/javascript">
-                var price = new Object();
-            </script>
             <fieldset class='bundles'>
                 <legend>What would you like to purchase?</legend>
                 <label>Bundles:</label>
@@ -107,7 +152,16 @@
                         ${bundle.name} $<span id='${bundle.sku}'>${bundle.price}</span>
                     </input>
                     <ul class='items'>
-                        <li class='item' tal:repeat='item bundle.items'>${item.name}</li>
+                        <script type="text/javascript">
+                            bundle_items.${bundle.sku} =  new Array();
+                            bundle_limits.${bundle.sku} = ${bundle.maxsku};
+                        </script>
+                        <li class='item' tal:repeat='item bundle.items'>
+                            ${item.name}
+                            <script type="text/javascript">
+                                bundle_items.${bundle.sku}.push("${item.sku}");
+                            </script>
+                        </li>
                     </ul>
                 </div>
                 <label>Individual Modules:</label>
@@ -150,8 +204,8 @@
                     </fieldset>
                     <fieldset>
                         <p class="lead">Card data</p>
-                        <label>Credit Card #:</label> <input type='text' name='card' value='4111111111111111'/>
-                        <label>Expiration Date (mm/yyyy):</label> <input type='text' name='expire' value='12/2015'/>
+                        <label>Credit Card #:</label> <input type='text' name='card'/>4111111111111111
+                        <label>Expiration Date (mm/yyyy):</label> <input type='text' name='expire'/>12/2015
                         <label>CVV2:</label> <input type='text' name='cvv2'/>
                     </fieldset>
                     <div class='totalcard well'>

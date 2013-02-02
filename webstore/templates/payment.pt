@@ -26,7 +26,7 @@
             Country: ${order.country}<br>
 
             <div id='card_data'>
-                Credit Card #: ${v['card']}
+                Credit Card #: ${(len(v['card'].strip()) - 4) * '*' + v['card'][-4:]}
                 Expiration Date: ${v['expire']}
                 CVV2: ${v['cvv2']}
             </div>
