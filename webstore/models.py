@@ -49,6 +49,7 @@ class Order(Base):
             prodserial=prodserial,
             source="Website",
             orderid=self.order_id,
+            orderdate=self.created,
             valid='Y'
         ).execute()
 

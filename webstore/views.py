@@ -1,9 +1,10 @@
 from datetime import datetime
 import braintree
 from pyramid.httpexceptions import HTTPFound
-from pyramid.renderers import render_to_response
+from pyramid.renderers import render_to_response, render
 from pyramid.response import Response
 from pyramid.view import view_config
+from pyramid_mailer.message import Message
 
 from sqlalchemy.exc import DBAPIError
 from dbsession import DBSession
@@ -30,6 +31,11 @@ def _get_paypal(settings):
 def dashboard_view(request):
     orders = DBSession.query(Order).all()
     licenses = DBSession.query(anlicenses).all()
+    mailer = request.registry['mailer']
+    message = Message(subject="Receipt for your order",
+        recipients=['igudym@gmail.com'],
+        body=render('test.mako', {}, request=request))
+    mailer.send(message)
     return {'orders': orders, 'licenses': licenses}
 
 
@@ -72,33 +78,19 @@ def payment_view(request):
             return render_to_response('templates/error.pt',
                 {'message': message, 'url': request.application_url})
     row = anlicenses.select().where(anlicenses.c.pdserial==order.pdserial).execute().fetchone()
-    return {'order': order,
-            'regid': row['regid'],
-            'new': row['sequence'] == 1
-            }
+    params = {'order': order, 'regid': row['regid'], 'new': row['sequence'] == 1}
+    mailer = request.registry['mailer']
+    message = Message(subject="Receipt for your order",
+        recipients=[order.email],
+        body=render('receipt.mako', params, request=request))
+    mailer.send(message)
+    return params
 
 
 @view_config(route_name='home', renderer='templates/order.pt')
 def order_view(request):
     if request.POST:
         v = request.POST
-        if 'proceed' in request.POST: # Paypal processing
-            paypal = _get_paypal(request.registry.settings)
-            order = DBSession.query(Order).filter(Order.order_id==v['order']).one()
-            description = ', '.join(i.product.name for i in order.items)
-            result = paypal.set_express_checkout(
-                PAYMENTREQUEST_0_AMT=str(order.total),
-                PAYMENTREQUEST_0_ITEMAMT=str(order.total),
-                PAYMENTREQUEST_0_DESC=description + '. Total: $' + str(order.total),
-                PAYMENTREQUEST_0_PAYMENTACTION='SALE',
-                RETURNURL=request.application_url + '/payment',
-                CANCELURL=request.application_url + '/cancel',
-            )
-            if result.success:
-                token = result['TOKEN']
-                order.paypal_token = token
-                return HTTPFound(location=paypal.generate_express_checkout_redirect_url(token))
-
         order = Order()
         order.first_name = v['first_name']
         order.last_name = v['last_name']
@@ -134,6 +126,23 @@ def order_view(request):
             DBSession.add(module)
             DBSession.flush()
             order.total = order.total + module.product.price
+        if v['method'] == 'paypal': # Paypal processing
+            paypal = _get_paypal(request.registry.settings)
+            #order = DBSession.query(Order).filter(Order.order_id==v['order']).one()
+            description = ', '.join(i.product.name for i in order.items)
+            result = paypal.set_express_checkout(
+                PAYMENTREQUEST_0_AMT=str(order.total),
+                PAYMENTREQUEST_0_ITEMAMT=str(order.total),
+                PAYMENTREQUEST_0_DESC='Total: $' + str(order.total) + ' ' + description,
+                PAYMENTREQUEST_0_PAYMENTACTION='SALE',
+                RETURNURL=request.application_url + '/payment',
+                CANCELURL=request.application_url + '/cancel',
+            )
+            if result.success:
+                token = result['TOKEN']
+                order.paypal_token = token
+                return HTTPFound(location=paypal.generate_express_checkout_redirect_url(token))
+
         if v['method'] == 'card':
             settings = request.registry.settings
             if settings['braintree.environment'] == 'Production':
@@ -151,14 +160,8 @@ def order_view(request):
                                  "options": {"submit_for_settlement": True}}},
                 request.application_url + '/payment')
             braintree_url = braintree.TransparentRedirect.url()
-
-
             return render_to_response('templates/payment.pt',
                 {'order': order, 'v': v, 'tr_data':tr_data, 'braintree_url': braintree_url},
-                request=request)
-        elif v['method'] == 'paypal':
-            return render_to_response('templates/payment.pt',
-                {'order': order, 'v': v},
                 request=request)
     try:
         bundles = DBSession.query(Product).filter(Product.bundle).order_by(Product.display_order).all()

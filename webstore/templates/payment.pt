@@ -3,11 +3,11 @@
         <h2>Order details</h2>
         <div tal:switch="v['lic']">
             <span tal:case='"new"'>You ordered new license</span>
-            <span tal:case='"upgrade"'>You will upgrade existing license $ {v['license']}</span>
+            <span tal:case='"upgrade"'>You will upgrade existing license ${v['license']}</span>
         </div>
         <div>
             Order #${order.order_id} Customer: ${order.first_name} ${order.last_name}
-            Email: ${order.email} Payment method: ${order.payment}
+            Email: ${order.email}
         </div>
         <table class='table table-striped'>
             <tr tal:repeat='item order.items'>
