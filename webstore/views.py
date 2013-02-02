@@ -1,4 +1,6 @@
 from datetime import datetime
+from smtplib import SMTPRecipientsRefused
+from socket import error
 import braintree
 from pyramid.httpexceptions import HTTPFound
 from pyramid.renderers import render_to_response, render
@@ -9,6 +11,9 @@ from pyramid_mailer.message import Message
 from sqlalchemy.exc import DBAPIError
 from dbsession import DBSession
 from paypal import PayPalInterface, PayPalAPIResponseError
+
+import logging
+log = logging.getLogger(__name__)
 
 from .models import (
     License,
@@ -82,8 +87,19 @@ def payment_view(request):
     mailer = request.registry['mailer']
     message = Message(subject="Receipt for your order",
         recipients=[order.email],
-        body=render('receipt.mako', params, request=request))
-    mailer.send(message)
+        body=render('receipt.mako', params))
+    try:
+        mailer.send_immediately(message)
+    except (SMTPRecipientsRefused, error) as e:
+        log.warn('Error sending mail: %s', e)
+    if request.registry.settings['webstore.notify']:
+        message = Message(subject="Notification for new order",
+            recipients=[request.registry.settings['webstore.notify']],
+            body=render('notify.mako', params))
+        try:
+            mailer.send_immediately(message)
+        except (SMTPRecipientsRefused, error) as e:
+            log.warn('Error sending mail: %s', e)
     return params
 
 
