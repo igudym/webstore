@@ -17,34 +17,37 @@
             </tr>
             <tr><td colspan='2'>Total:</td><td>$${order.total}</td>
         </table>
-        <div>
-            Address 1: ${order.addr1}<br>
-            Address 2: ${order.addr2}<br>
-            City: ${order.city}<br>
-            State / Province: ${order.state}<br>
-            Zip / Postal Code: ${order.zipcode}<br>
-            Country: ${order.country}<br>
-
-            <div id='card_data'>
-                Credit Card #: ${(len(v['card'].strip()) - 4) * '*' + v['card'][-4:]}
-                Expiration Date: ${v['expire']}
-                CVV2: ${v['cvv2']}
-            </div>
-        </div>
-        Please, check carefully order details above and then proceed to checkout.
         <div tal:switch='order.payment'>
             <form tal:case='"card"' id='payment-form' action='${braintree_url}' method='POST'>
                 <input type='hidden' name='tr_data' value='${tr_data}' />
-                <input type='hidden' name='transaction[credit_card][number]' id='braintree_credit_card_number' value="${v['card']}"/>
-                <input type='hidden' name='transaction[credit_card][expiration_date]' id='braintree_credit_card_exp' value="${v['expire']}"/>
                 <input type='hidden' name='transaction[billing][first_name]' value="${order.first_name}"/>
                 <input type='hidden' name='transaction[billing][last_name]' value="${order.last_name}"/>
-                <input type='hidden' name='transaction[billing][street_address]' value="${order.addr1}"/>
-                <input type='hidden' name='transaction[billing][extended_address]' value="${order.addr2}"/>
-                <input type='hidden' name='transaction[billing][locality]' value="${order.city}"/>
-                <input type='hidden' name='transaction[billing][region]' value="${order.state}"/>
-                <input type='hidden' name='transaction[billing][postal_code]' value="${order.zipcode}"/>
-                <input type='hidden' name='transaction[billing][country_name]' value="${order.country}"/>
+                <p class="lead">Billing Address</p>
+                <label>Address 1:</label>
+                <input type='text' name='transaction[billing][street_address]'/>
+                <label>Address 2:</label>
+                <input type='text' name='transaction[billing][extended_address]'/>
+                <label>City:</label>
+                <input type='text' name='transaction[billing][locality]'/>
+                <label>State / Province:</label>
+                <input type='text' name='transaction[billing][region]'/>
+                <label>Zip / Postal Code:</label>
+                <input type='text' name='transaction[billing][postal_code]'/>
+                <label>Country:</label>
+                <select name='transaction[billing][country_name]' metal:use-macro="load: countries.pt"></select>
+                <p class="lead">Card data</p>
+                <label>Credit Card #:</label>
+                <input type='text' name='transaction[credit_card][number]'/>4111111111111111
+                <label>Expiration Date:</label>
+                <select name='transaction[credit_card][expiration_month]' class='month'>
+                    <option tal:repeat='i range(1,13)' value='${"%02d"%i}'>${"%02d"%i}</option>
+                </select>
+                <select name='transaction[credit_card][expiration_year]' class='year'>
+                    <option tal:repeat='i range(2013, 2023)' value='${i}'>${i}</option>
+                </select>
+                <label>CVV2:</label>
+                <input type='text' name='transaction[credit_card][cvv]'/>
+                <p class='well'>Please, check carefully order details above and then proceed to checkout.</p>
                 <div class="form-actions">
                     <button id='submit' type="submit" class="btn btn-primary">Checkout</button>
                 </div>

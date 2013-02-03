@@ -19,3 +19,11 @@ body{
     font-size: 30px;
     color: #468847;
 }
+
+.month {
+    width: 70px;
+}
+
+.year {
+    width: 145px;
+}

@@ -1,4 +1,4 @@
-<select name="country">
+<select name="transaction[billing][country_name]">
 <option value="" selected="selected">Select Country</option>
 <option value="United States">United States</option>
 <option value="United Kingdom">United Kingdom</option>

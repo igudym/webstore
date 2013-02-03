@@ -75,15 +75,6 @@
         $("#submit").prop('disabled', total < 0.01);
         check_mods();
     }
-    function toggleCard() {
-        if ($('#paypal').is(':checked')) {
-            //$('#card_data :input').prop('disabled', true);
-            $('#card_data').hide(400, 'swing');
-        } else {
-            //$('#card_data :input').removeAttr('disabled');
-            $('#card_data').show(400, 'swing');
-        }
-    }
     var bundle_items = {'0': []};
     var bundle_limits = {'0': 1};
     function check_mods(){
@@ -187,31 +178,9 @@
                     Credit Card
                 </label>
                 <label class="radio inline">
-                    <input type='radio' name='method' id='paypal' value='paypal' onchange="toggleCard()"/>
+                    <input type='radio' name='method' id='paypal' value='paypal'/>
                     PayPal
                 </label>
-                <div class='card_data section' id='card_data'>
-                    <fieldset>
-                        <p class="lead">Billing Address</p>
-                        <label>Address 1:</label> <input type='text' name='address1'/>
-                        <label>Address 2:</label> <input type='text' name='address2'/>
-                        <label>City:</label> <input type='text' name='city'/>
-                        <label>State / Province:</label><input type='text' name='state'/>
-                        <label>Zip / Postal Code:</label> <input type='text' name='zip'/>
-                        <label>Country:</label>
-                            <select name="country" metal:use-macro="load: countries.pt">
-                            </select>
-                    </fieldset>
-                    <fieldset>
-                        <p class="lead">Card data</p>
-                        <label>Credit Card #:</label> <input type='text' name='card'/>4111111111111111
-                        <label>Expiration Date (mm/yyyy):</label> <input type='text' name='expire'/>12/2015
-                        <label>CVV2:</label> <input type='text' name='cvv2'/>
-                    </fieldset>
-                    <div class='totalcard well'>
-                        Total: US $<span id=totalcard>0.0</span>
-                    </div>
-                </div>
             </fieldset>
             <div class="form-actions">
                 <button id='submit' type="submit" class="btn btn-primary">Submit Order</button>

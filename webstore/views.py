@@ -118,13 +118,6 @@ def order_view(request):
         order.payment = v['method']
         order.status = 'pending'
         order.created = datetime.now()
-        if v['method'] == 'card':
-            order.addr1 = v['address1']
-            order.addr2 = v['address2']
-            order.city = v['city']
-            order.state = v['state']
-            order.zipcode = v['zip']
-            order.country = v['country']
         DBSession.add(order)
         DBSession.flush()
 
