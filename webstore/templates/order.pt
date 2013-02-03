@@ -69,7 +69,7 @@
                 modules = modules + parseFloat($(this).prop('innerHTML'));
             }
         });
-        total = Number((bundle + modules).toFixed(2));
+        total = (bundle + modules).toFixed(2);
         $('#total').prop('innerHTML', total)
         $('#totalcard').prop('innerHTML', total)
         $("#submit").prop('disabled', total < 0.01);
@@ -85,8 +85,12 @@
                     if( arr.indexOf($(this).prop('value')) >= 0 ||
                         products.indexOf($(this).prop('value')) >= 0 ){
                         $(this).prop('disabled', true);
+                        $(this).parent().css('color', '#999999');
+                        $(this).parent().children('a').css('color', '#99CFEB');
                     }else{
                         $(this).prop('disabled', false);
+                        $(this).parent().css('color', $('body').css('color'));
+                        $(this).parent().children('a').css('color', '#0088CC');
                     }
                 });
             }
@@ -106,7 +110,13 @@
                     if(bundle_items[sku].indexOf($(this).prop('value')) >= 0) n++;
                 }
             });
-            $(this).prop('disabled', n > bundle_limits[sku]);
+            if( n > bundle_limits[sku] ){
+                $(this).prop('disabled', true);
+                $(this).parent().css('color', '#999999');
+            }else{
+                $(this).prop('disabled', false);
+                $(this).parent().css('color', $('body').css('color'));
+            }
         });
     }
     </script>
@@ -140,7 +150,7 @@
                 </div>
                 <div class='bundle' tal:repeat='bundle bundles'>
                     <input type='radio' name='bundle' value='${bundle.sku}' onclick="calc()">
-                        ${bundle.name} $<span id='${bundle.sku}'>${bundle.price}</span>
+                        ${bundle.name} $<span id='${bundle.sku}'>${'%.2f'%bundle.price}</span>
                     </input>
                     <ul class='items'>
                         <script type="text/javascript">
@@ -160,12 +170,12 @@
                     <input type='checkbox' name='module' value='${module.sku}' onclick="calc()">
                         <a rel="tooltip" href="${module.url}" data-placement="right" data-original-title="${module.description}">
                             ${module.name}
-                        </a> - $<span id='${module.sku}'>${module.price}</span>
+                        </a> - $<span id='${module.sku}'>${'%.2f'%module.price}</span>
                     </input>
                 </div>
             </fieldset>
             <div class='total section well'>
-                Total: US $<span id=total>0.0</span>
+                Total: US $<span id=total>0.00</span>
             </div>
             <fieldset>
                 <legend>Payment:</legend>

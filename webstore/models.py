@@ -34,12 +34,6 @@ class Order(Base):
     payment = Column(String(20))
     status = Column(String(20))
     created = Column(DateTime)
-    addr1 = Column(String(100))
-    addr2 = Column(String(100))
-    city = Column(String(100))
-    state = Column(String(100))
-    zipcode = Column(String(100))
-    country = Column(String(100))
     paypal_token = Column(String(30))
 
     def _add_product(self, item, prodserial):

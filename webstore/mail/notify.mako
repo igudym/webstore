@@ -14,4 +14,4 @@ Products Purchased:
         ${item.product.name}
 % endfor
 
-Order #${order.order_id}, Total: $${order.total}
+Order #${order.order_id}, Total: $${'%.2f'%order.total}

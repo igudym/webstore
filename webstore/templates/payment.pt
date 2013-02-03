@@ -13,9 +13,9 @@
             <tr tal:repeat='item order.items'>
                 <td>${item.sku}</td>
                 <td>${item.product.name}</td>
-                <td>$${item.product.price}</td>
+                <td>$${'%.2f'%item.product.price}</td>
             </tr>
-            <tr><td colspan='2'>Total:</td><td>$${order.total}</td>
+            <tr><td colspan='2'>Total:</td><td>$${'%.2f'%order.total}</td>
         </table>
         <div tal:switch='order.payment'>
             <form tal:case='"card"' id='payment-form' action='${braintree_url}' method='POST'>

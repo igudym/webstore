@@ -15,6 +15,6 @@
                 <td>${item.product.name}</td>
             </tr>
         </table>
-        Order #${order.order_id}, Total: $${order.total}
+        Order #${order.order_id}, Total: $${'%.2f'%order.total}
     </div>
 </metal:main>
