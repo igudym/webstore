@@ -58,7 +58,7 @@ def notify_view(request):
         except:
             log.warn('Wrong transaction: $s', str(request))
         else:
-            if response.params['payment_status'] == 'Completed':
+            if request.params['payment_status'] == 'Completed':
                 order.confirm()
                 row = anlicenses.select().where(anlicenses.c.pdserial==order.pdserial
                                                                 ).execute().fetchone()
