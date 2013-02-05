@@ -1,6 +1,7 @@
 from datetime import datetime
 from smtplib import SMTPRecipientsRefused
 from socket import error
+import urllib2
 import braintree
 from pyramid.httpexceptions import HTTPFound
 from pyramid.renderers import render_to_response, render
@@ -42,6 +43,17 @@ def dashboard_view(request):
         body=render('test.mako', {}, request=request))
     mailer.send(message)
     return {'orders': orders, 'licenses': licenses}
+
+
+@view_config(name='notify')
+def notify_view(request):
+    paypal = _get_paypal(request.registry.settings)
+    print request.query_string
+    print request.params
+    response = urllib2.urlopen(paypal.config.PAYPAL_URL_BASE +
+                               '?cmd=_notify-validate&' + request.query_string).read()
+    print response
+    return Response(body='', content_type='text/plain')
 
 
 @view_config(name='cancel', renderer='templates/error.pt')
