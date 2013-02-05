@@ -35,6 +35,7 @@ class Order(Base):
     status = Column(String(20))
     created = Column(DateTime)
     paypal_token = Column(String(30))
+    paypal_transaction = Column(String(30))
 
     def _add_product(self, item, prodserial):
         anproducts.insert().values(

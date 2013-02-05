@@ -1,14 +1,20 @@
 <metal:main use-macro="load: main.pt">
     <div metal:fill-slot="content" class="container">
         <h1>Thanks for your order!</h1>
-        <div tal:condition='new'>Your New License ID is:</div>
-        <div tal:condition='not new'>Upgrade for License ID:</div>
-        <div class="well well-large regid">
-            ${regid}
+        <div tal:condition='not echeck'>
+            <div tal:condition='new'>Your New License ID is:</div>
+            <div tal:condition='not new'>Upgrade for License ID:</div>
+            <div class="well well-large regid">
+                ${regid}
+            </div>
+            <div tal:condition='new'>To activate your new license, (blah blah blah)</div>
+            <div tal:condition='not new'>To upgrade your license, (blah blah blah)</div>
         </div>
-        <div tal:condition='new'>To activate your new license, (blah blah blah)</div>
-        <div tal:condition='not new'>To upgrade your license, (blah blah blah)</div>
-
+        <div tal:condition='echeck'>
+            Because you paid by e-check, it will take several days for your payment to clear.
+            Once it does, our system will automatically send you an email with information
+            on how to activate your purchase.
+        </div>
         <h3>Products Purchased:</h3>
         <table class='table table-hover'>
             <tr tal:repeat='item order.items'>

@@ -1,6 +1,7 @@
 from datetime import datetime
 from smtplib import SMTPRecipientsRefused
 from socket import error
+import urllib
 import urllib2
 import braintree
 from pyramid.httpexceptions import HTTPFound
@@ -48,11 +49,26 @@ def dashboard_view(request):
 @view_config(name='notify')
 def notify_view(request):
     paypal = _get_paypal(request.registry.settings)
-    print request.query_string
-    print request.params
-    response = urllib2.urlopen(paypal.config.PAYPAL_URL_BASE +
-                               '?cmd=_notify-validate&' + request.query_string).read()
-    print response
+    response = urllib2.urlopen(paypal.config.PAYPAL_URL_BASE,
+                    'cmd=_notify-validate&' + urllib.urlencode(request.params)).read()
+    if response == 'VERIFIED':
+        transaction = request.params['txn_id']
+        try:
+            order = DBSession.query(Order).filter(Order.paypal_transaction==transaction).one()
+        except:
+            log.warn('Wrong transaction: $s', str(request))
+        else:
+            if response.params['payment_status'] == 'Completed':
+                order.confirm()
+                row = anlicenses.select().where(anlicenses.c.pdserial==order.pdserial
+                                                                ).execute().fetchone()
+                params = {'order': order, 'regid': row['regid'],
+                          'new': row['sequence'] == 1, 'echeck': False}
+                _send_mail(request, params)
+            else:
+                log.warn('Useless IPN: %s' % str(request))
+    else:
+        log.warn('Invalid IPN request %s', str(request))
     return Response(body='', content_type='text/plain')
 
 
@@ -67,24 +83,32 @@ def cancel_view(request):
 
 @view_config(name='payment', renderer='templates/success.pt')
 def payment_view(request):
+    echeck = False
     if 'token' in request.params: # paypal return
         token = request.params['token']
         order = DBSession.query(Order).filter(Order.paypal_token==token).one()
         paypal = _get_paypal(request.registry.settings)
         try:
             result = paypal.get_express_checkout_details(token=token)
-            print result
             payerid = result['PAYERID']
             result = paypal.do_express_checkout_payment(token=token, payerid=payerid,
                 PAYMENTACTION='SALE',
                 PAYMENTREQUEST_0_PAYMENTACTION='SALE',
                 PAYMENTREQUEST_0_AMT=str(order.total)
                 )
-            print result
+            status = result['PAYMENTINFO_0_PAYMENTSTATUS']
+            if  status == 'Completed':
+                order.confirm()
+            elif status == 'Pending' and result['PAYMENTINFO_0_PAYMENTTYPE'] == 'echeck':
+                order.paypal_transaction = result['PAYMENTINFO_0_TRANSACTIONID']
+                echeck = True
+            else:
+                log.warn(str(result))
+                return render_to_response('templates/error.pt',
+                    {'message': 'PayPal returns: ' + str(result), 'url': request.application_url})
         except PayPalAPIResponseError, e:
             return render_to_response('templates/error.pt',
                 {'message': str(e), 'url': request.application_url})
-        order.confirm()
     else: # braintree
         result = braintree.TransparentRedirect.confirm(request.query_string)
         if result.is_success:
@@ -94,11 +118,21 @@ def payment_view(request):
                 result.errors.deep_errors)
             return render_to_response('templates/error.pt',
                 {'message': message, 'url': request.application_url})
-    row = anlicenses.select().where(anlicenses.c.pdserial==order.pdserial).execute().fetchone()
-    params = {'order': order, 'regid': row['regid'], 'new': row['sequence'] == 1}
+    if echeck:
+        params = {'order': order, 'echeck': echeck}
+    else:
+        row = anlicenses.select().where(anlicenses.c.pdserial==order.pdserial
+                                                        ).execute().fetchone()
+        params = {'order': order, 'regid': row['regid'],
+                  'new': row['sequence'] == 1, 'echeck': echeck}
+    _send_mail(request, params)
+    return params
+
+
+def _send_mail(request, params):
     mailer = request.registry['mailer']
     message = Message(subject="Receipt for your order",
-        recipients=[order.email],
+        recipients=[params['order'].email],
         body=render('receipt.mako', params))
     try:
         mailer.send_immediately(message)
@@ -112,7 +146,6 @@ def payment_view(request):
             mailer.send_immediately(message)
         except (SMTPRecipientsRefused, error) as e:
             log.warn('Error sending mail: %s', e)
-    return params
 
 
 @view_config(route_name='home', renderer='templates/order.pt')

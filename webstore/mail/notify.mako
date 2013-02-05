@@ -1,12 +1,16 @@
 You receive new order!
 
-
-% if new:
-    New License ID is: ${regid}
+% if echeck:
+    Payed by Echeck, wait for clear.
 
 % else:
-    Upgrade for License ID: ${regid}
+    % if new:
+        New License ID is: ${regid}
 
+    % else:
+        Upgrade for License ID: ${regid}
+
+    % endif
 % endif
 
 Products Purchased:

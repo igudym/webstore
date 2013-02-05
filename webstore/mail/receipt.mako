@@ -1,14 +1,19 @@
 Thanks for your order!
 
-
-% if new:
-    Your New License ID is: ${regid}
-
-    To activate your new license, (blah blah blah)
+% if echeck:
+    Because you paid by e-check, it will take several days for your payment to clear.
+    Once it does, our system will automatically send you an email with information on
+    how to activate your purchase.
 % else:
-    Upgrade for License ID: ${regid}
+    % if new:
+        Your New License ID is: ${regid}
 
-    To upgrade your license, (blah blah blah)
+        To activate your new license, (blah blah blah)
+    % else:
+        Upgrade for License ID: ${regid}
+
+        To upgrade your license, (blah blah blah)
+    % endif
 % endif
 
 Products Purchased:
