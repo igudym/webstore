@@ -34,18 +34,6 @@ def _get_paypal(settings):
     )
 
 
-@view_config(name='admin', renderer='templates/dashboard.pt')
-def dashboard_view(request):
-    orders = DBSession.query(Order).all()
-    licenses = DBSession.query(anlicenses).all()
-    mailer = request.registry['mailer']
-    message = Message(subject="Receipt for your order",
-        recipients=['igudym@gmail.com'],
-        body=render('test.mako', {}, request=request))
-    mailer.send(message)
-    return {'orders': orders, 'licenses': licenses}
-
-
 @view_config(name='notify')
 def notify_view(request):
     paypal = _get_paypal(request.registry.settings)
